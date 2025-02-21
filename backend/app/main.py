@@ -11,7 +11,7 @@ import json
 from infobip_channels.whatsapp.channel import WhatsAppChannel
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
-
+from typing import List
 
 load_dotenv()
 
@@ -76,7 +76,7 @@ def send_otp_via_whatsapp(phone_number: str, otp: str):
     payload = json.dumps({
         "messages": [
             {
-                "from": "447860099299",  # Замените на ваш номер WhatsApp
+                "from": "447860099299",  # Whatsapp
                 "to": phone_number,
                 "messageId": "40fbbce4-151b-432f-85ec-9d6c866acef8",
                 "content": {
@@ -158,3 +158,14 @@ def create_deposit(
     if db_deposit:
         raise HTTPException(status_code=400, detail="Wallet address already used")
     return crud.create_deposit(db=db, deposit=deposit, user_id=current_user.id)
+
+
+@app.post("/prices/", response_model=schemas.Price)
+def create_price(price: schemas.PriceCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.create_price(db=db, price=price, user_id=current_user.id)
+
+
+@app.get("/prices/", response_model=List[schemas.Price])
+def read_prices(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    prices = crud.get_prices_by_user(db, user_id=current_user.id)
+    return prices

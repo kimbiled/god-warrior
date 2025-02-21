@@ -12,6 +12,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
 
     deposits = relationship("Deposit", back_populates="user")
+    prices = relationship("Price", back_populates="user")
 
 
 class Deposit(Base):
@@ -24,3 +25,14 @@ class Deposit(Base):
     status = Column(String, default="pending")
 
     user = relationship("User", back_populates="deposits")
+
+
+class Price(Base):
+    __tablename__ = "prices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    buy_price = Column(Float)
+    sell_price = Column(Float)
+
+    user = relationship("User", back_populates="prices")
