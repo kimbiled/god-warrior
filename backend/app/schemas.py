@@ -44,16 +44,36 @@ class Deposit(DepositBase):
     class Config:
         orm_mode = True
 
+
 class PriceBase(BaseModel):
     buy_price: float
     sell_price: float
 
+
 class PriceCreate(PriceBase):
     pass
+
 
 class Price(PriceBase):
     id: int
     user_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class WithdrawalBase(BaseModel):
+    amount: float
+
+
+class WithdrawalCreate(WithdrawalBase):
+    pass
+
+
+class Withdrawal(WithdrawalBase):
+    id: int
+    user_id: int
+    status: str
 
     class Config:
         orm_mode = True

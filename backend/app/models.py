@@ -10,9 +10,12 @@ class User(Base):
     phone_number = Column(String, unique=True, index=True)
     otp = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
-
+    xrp_balance = Column(Float, default=0.0)
+    btc_balance = Column(Float, default=0.0)
+    usd_balance = Column(Float, default=0.0)
     deposits = relationship("Deposit", back_populates="user")
     prices = relationship("Price", back_populates="user")
+    withdrawals = relationship("Withdrawal", back_populates="user")
 
 
 class Deposit(Base):
@@ -36,3 +39,14 @@ class Price(Base):
     sell_price = Column(Float)
 
     user = relationship("User", back_populates="prices")
+
+
+class Withdrawal(Base):
+    __tablename__ = "withdrawals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    amount = Column(Float)
+    status = Column(String, default="pending")
+
+    user = relationship("User", back_populates="withdrawals")

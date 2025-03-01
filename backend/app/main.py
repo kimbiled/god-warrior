@@ -8,10 +8,11 @@ from datetime import datetime, timedelta
 import random
 import os
 import json
-from infobip_channels.whatsapp.channel import WhatsAppChannel
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 from typing import List
+from .trading_logic import start_monitoring as start_trading_monitoring
+from .blockchain_monitor import start_monitoring as start_blockchain_monitoring
 
 load_dotenv()
 
@@ -73,29 +74,27 @@ def get_current_user(
 
 def send_otp_via_whatsapp(phone_number: str, otp: str):
     conn = http.client.HTTPSConnection("api.infobip.com")
-    payload = json.dumps({
-        "messages": [
-            {
-                "from": "447860099299",  # Whatsapp
-                "to": phone_number,
-                "messageId": "40fbbce4-151b-432f-85ec-9d6c866acef8",
-                "content": {
-                    "templateName": "test_whatsapp_template_en",
-                    "templateData": {
-                        "body": {
-                            "placeholders": [otp]
-                        }
+    payload = json.dumps(
+        {
+            "messages": [
+                {
+                    "from": "447860099299",  # Whatsapp
+                    "to": phone_number,
+                    "messageId": "40fbbce4-151b-432f-85ec-9d6c866acef8",
+                    "content": {
+                        "templateName": "test_whatsapp_template_en",
+                        "templateData": {"body": {"placeholders": [otp]}},
+                        "text": f"Your OTP code is {otp}",
+                        "language": "en",
                     },
-                    "text": f"Your OTP code is {otp}",
-                    "language": "en"
                 }
-            }
-        ]
-    })
+            ]
+        }
+    )
     headers = {
-        'Authorization': f'App {INFOBIP_API_KEY}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        "Authorization": f"App {INFOBIP_API_KEY}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
     }
     conn.request("POST", "/whatsapp/1/message/template", payload, headers)
     res = conn.getresponse()
@@ -161,11 +160,34 @@ def create_deposit(
 
 
 @app.post("/prices/", response_model=schemas.Price)
-def create_price(price: schemas.PriceCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def create_price(
+    price: schemas.PriceCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     return crud.create_price(db=db, price=price, user_id=current_user.id)
 
 
 @app.get("/prices/", response_model=List[schemas.Price])
-def read_prices(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def read_prices(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
     prices = crud.get_prices_by_user(db, user_id=current_user.id)
     return prices
+
+
+@app.post("/withdraw/", response_model=schemas.Withdrawal)
+def create_withdrawal(
+    withdrawal: schemas.WithdrawalCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.usd_balance < withdrawal.amount:
+        raise HTTPException(status_code=400, detail="Insufficient balance")
+    return crud.create_withdrawal(db=db, withdrawal=withdrawal, user_id=current_user.id)
+
+
+@app.on_event("startup")
+def on_startup():
+    start_trading_monitoring()
+    start_blockchain_monitoring()

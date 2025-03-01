@@ -45,6 +45,7 @@ def get_deposit_by_wallet_address(db: Session, wallet_address: str):
         .first()
     )
 
+
 def create_price(db: Session, price: schemas.PriceCreate, user_id: int):
     db_price = models.Price(**price.dict(), user_id=user_id)
     db.add(db_price)
@@ -52,5 +53,14 @@ def create_price(db: Session, price: schemas.PriceCreate, user_id: int):
     db.refresh(db_price)
     return db_price
 
+
 def get_prices_by_user(db: Session, user_id: int):
     return db.query(models.Price).filter(models.Price.user_id == user_id).all()
+
+
+def create_withdrawal(db: Session, withdrawal: schemas.WithdrawalCreate, user_id: int):
+    db_withdrawal = models.Withdrawal(**withdrawal.dict(), user_id=user_id)
+    db.add(db_withdrawal)
+    db.commit()
+    db.refresh(db_withdrawal)
+    return db_withdrawal
