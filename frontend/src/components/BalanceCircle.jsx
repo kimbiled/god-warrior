@@ -1,15 +1,11 @@
 import React from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import { useNavigate } from "react-router-dom";
 const BalanceCircle = () => {
   const percentage = 75; // Основной прогресс
-  const navigate = useNavigate()
-  const handleClick = () => {
-    navigate('/balance')
-  }
+
   return (
-    <div className="relative w-48 h-48 flex items-center justify-center" onClick={handleClick}>
+    <div className="relative w-48 h-48 flex items-center justify-center">
       {/* Внешний пунктирный круг */}
       <div className="absolute w-full h-full rounded-full border-[3px] border-dashed border-blue-500 opacity-50"></div>
 
