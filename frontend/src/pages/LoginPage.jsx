@@ -60,7 +60,7 @@ const handleClick = () => {
         </button>
         <p className="text-center text-sm text-gray-300 mt-4">
           Don’t have an account?{' '}
-          <a href="#" className="text-blue-400 hover:underline">Sign Up</a>
+          <a href="/register" className="text-blue-400 hover:underline">Sign Up</a>
         </p>
         </div>
       </div>

@@ -14,6 +14,10 @@ import { useNavigate } from "react-router-dom";
 import BalanceCircle from "../components/BalanceCircle";
 const CryptoPage = () => {
 
+  const navigate = useNavigate()
+  const handleClickNotification = () => {
+    navigate('/notification')
+}
 
   const [isSwapped, setIsSwapped] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -28,10 +32,11 @@ const CryptoPage = () => {
   };
 
   return (
-    <div className="flex flex-col bg-transparent h-auto text-white p-4 max-w-md mx-auto">
+    <div className="flex flex-col bg-transparent h-auto text-white p-4 max-w-md mx-auto pb-[120px]">
       <div className="w-full flex justify-between items-center mb-6 relative mt-16">
         <h1 className="text-[20px] font-black text-center w-full">Ai Ur Crypto.Com</h1>
-        <div className="absolute right-0 p-2 bg-gradient-to-r from-[#262833] to-[#091025] rounded-full cursor-pointer">
+        <div className="absolute right-0 p-2 bg-gradient-to-r from-[#262833] to-[#091025] rounded-full cursor-pointer"
+        onClick={handleClickNotification}>
           <img src={bell} alt="bell" className="w-[20px] h-[20px]" />
         </div>
       </div>

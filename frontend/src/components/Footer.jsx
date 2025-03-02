@@ -5,16 +5,35 @@ import notification from '../img/notification.svg'
 import profile from '../img/profile.svg'
 import transfer from '../img/transfer.png'
 import { useNavigate } from "react-router-dom"
+import {useState} from 'react'
 const FooterMenu = () => {
+
+  const [isActive, setIsActive] = useState("Home")
+  
 
     const navigate = useNavigate()
     const handleClick = () => {
         navigate('/sales')
     }
 
+    const handleClickHome = () => {
+      navigate('/dashboard')
+  }
+
+  const handleClickNotification = () => {
+    navigate('/notification')
+}
+
+
+const handleClickMarket = () => {
+  navigate('/balance')
+}
+const handleClickProfile = () => {
+  navigate('/profile')
+}
     return (
       <div
-        className="fixed bottom-0 left-1/2 transform -translate-x-1/2 min-w-[320px] max-w-[425px] w-full h-[70px] bg-no-repeat bg-center bg-cover flex items-center justify-between"
+        className="fixed bottom-3 left-1/2 transform -translate-x-1/2 min-w-[320px] max-w-[425px] w-full h-[70px] bg-no-repeat bg-center bg-cover flex items-center justify-between"
         style={{
             backgroundImage: `url(${footer})`,
             backgroundSize: "cover",
@@ -30,20 +49,22 @@ const FooterMenu = () => {
       </div>
       <div className="flex min-w-[320px] max-w-[425px] w-full justify-between items-center">
   {/* Home (Активный) */}
-  <div className="flex flex-col items-center cursor-pointer">
+  <div className="flex flex-col items-center cursor-pointer" 
+  onClick={handleClickHome}>
     <span>
       <img
         src={home}
         alt="home"
         className="w-6 h-6 transition-all duration-200"
-        style={{ filter: "grayscale(0%)", color: "#4D60FF" }} // Делаем Home синим
+       
       />
     </span>
     <p className="text-xs text-[#4D60FF] transition-all duration-200">Home</p>
   </div>
 
   {/* Market */}
-  <div className="flex flex-col items-center group cursor-pointer">
+  <div className="flex flex-col items-center group cursor-pointer"
+  onClick={handleClickMarket}>
     <span>
       <img
         src={market}
@@ -57,7 +78,8 @@ const FooterMenu = () => {
   <div className="w-[50px]"></div> {/* Отступ под центральный круг */}
 
   {/* Notification */}
-  <div className="flex flex-col items-center group cursor-pointer">
+  <div className="flex flex-col items-center group cursor-pointer"
+  onClick={handleClickNotification}>
     <span>
       <img
         src={notification}
@@ -69,7 +91,8 @@ const FooterMenu = () => {
   </div>
 
   {/* Profile */}
-  <div className="flex flex-col items-center group cursor-pointer">
+  <div className="flex flex-col items-center group cursor-pointer"
+  onClick={handleClickProfile}>
     <span>
       <img
         src={profile}
@@ -82,7 +105,7 @@ const FooterMenu = () => {
 </div>
         </div>
       </div>
-    );
-  };
-  
-  export default FooterMenu;
+    )
+}
+
+export default FooterMenu;
