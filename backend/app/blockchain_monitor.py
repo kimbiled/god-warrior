@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from . import crud, database, models
 import logging
 from dotenv import load_dotenv
+import os 
+import threading
 
 load_dotenv()
 
