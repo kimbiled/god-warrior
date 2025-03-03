@@ -188,6 +188,17 @@ def set_sell_price(
     return crud.set_sell_price(db=db, price=price, user_id=current_user.id)
 
 
+@app.get("/current-prices/", response_model=List[schemas.CurrentPrice])
+def get_current_prices(db: Session = Depends(get_db)):
+    return crud.get_current_market_prices(db)
+
+
+@app.get("/user-deposit/", response_model=float)
+def get_user_deposit(current_user: models.User = Depends(get_current_user)):
+    return current_user.usd_balance
+
+
+
 
 
 @app.on_event("startup")

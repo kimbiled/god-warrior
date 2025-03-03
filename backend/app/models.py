@@ -36,6 +36,7 @@ class Price(Base):
     id = Column(Integer, primary_key=True, index=True)
     currency = Column(String, index=True)
     price = Column(Float)
+    amount = Column(Float)
     user_id = Column(Integer, ForeignKey("users.id"))
     type = Column(String)
 

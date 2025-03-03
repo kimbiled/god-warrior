@@ -48,6 +48,7 @@ class Deposit(DepositBase):
 class PriceBase(BaseModel):
     currency: str
     price: float
+    amount: float
 
 
 class PriceCreate(PriceBase):
