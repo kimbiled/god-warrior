@@ -131,17 +131,17 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": db_user.phone_number}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
 @app.post("/send-otp/")
-def send_otp(phone_number: schemas.SendOTP, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_phone(db, phone_number=phone_number)
+def send_otp(otp_data: schemas.SendOTP, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_phone(db, phone_number=otp_data.phone_number)
     if not db_user:
         raise HTTPException(status_code=400, detail="Phone number not registered")
     otp = str(random.randint(100000, 999999))
     crud.update_user_otp(db, db_user, otp)
-    send_otp_via_whatsapp(phone_number, otp)
+    send_otp_via_whatsapp(otp_data.phone_number, otp)
     return {"message": "OTP sent"}
 
 
