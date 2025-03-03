@@ -27,6 +27,10 @@ class OTP(BaseModel):
     otp: str
 
 
+class SendOTP(BaseModel):
+    phone_number: str
+
+
 class DepositBase(BaseModel):
     wallet_address: str
     amount: float
@@ -92,6 +96,13 @@ class Withdrawal(WithdrawalBase):
     id: int
     user_id: int
     status: str
+
+    class Config:
+        orm_mode = True
+
+
+class UserDeposit(BaseModel):
+    usd_balance: float
 
     class Config:
         orm_mode = True
