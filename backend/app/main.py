@@ -13,6 +13,8 @@ from sqlalchemy.orm import sessionmaker
 from typing import List
 from .trading_logic import start_monitoring as start_trading_monitoring
 from .blockchain_monitor import start_monitoring as start_blockchain_monitoring
+from fastapi.middleware.cors import CORSMiddleware
+
 
 load_dotenv()
 
@@ -31,6 +33,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=database.engine)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Разрешить все источники (лучше указать конкретный: ["http://localhost:3000"])
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешить все методы (GET, POST и т.д.)
+    allow_headers=["*"],  # Разрешить все заголовки
+)
 
 def get_db():
     db = SessionLocal()
