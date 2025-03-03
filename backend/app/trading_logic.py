@@ -55,7 +55,6 @@ def check_prices_and_execute_trades(db: Session):
     users = crud.get_all_users(db)
     current_prices_list = crud.get_current_market_prices(db)
 
-    # Преобразуем список текущих цен в словарь
     current_prices = {price.currency: price.price for price in current_prices_list}
 
     for user in users:
@@ -67,14 +66,22 @@ def check_prices_and_execute_trades(db: Session):
                 current_prices.get(order.currency) is not None
                 and current_prices[order.currency] <= order.price
             ):
-                pass
+                amount_to_buy = order.amount
+                user.usd_balance -= amount_to_buy
+                user.btc_balance += amount_to_buy / current_prices[order.currency]
+                db.delete(order)
+                db.commit()
 
         for order in sell_orders:
             if (
                 current_prices.get(order.currency) is not None
                 and current_prices[order.currency] >= order.price
             ):
-                pass
+                amount_to_sell = order.amount
+                user.btc_balance -= amount_to_sell
+                user.usd_balance += amount_to_sell * current_prices[order.currency]
+                db.delete(order)
+                db.commit()
 
 
 def monitor_trades():

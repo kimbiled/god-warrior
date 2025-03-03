@@ -144,7 +144,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 
 
 @app.post("/send-otp/")
-def send_otp(phone_number: str, db: Session = Depends(get_db)):
+def send_otp(phone_number: schemas.SendOTP, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_phone(db, phone_number=phone_number)
     if not db_user:
         raise HTTPException(status_code=400, detail="Phone number not registered")
@@ -197,6 +197,14 @@ def set_sell_price(
     return crud.set_sell_price(db=db, price=price, user_id=current_user.id)
 
 
+@app.get("/current-prices/", response_model=List[schemas.CurrentPrice])
+def get_current_prices(db: Session = Depends(get_db)):
+    return crud.get_current_market_prices(db)
+
+
+@app.get("/user-deposit/", response_model=schemas.UserDeposit)
+def get_user_deposit(current_user: models.User = Depends(get_current_user)):
+    return {"usd_balance": current_user.usd_balance}
 
 
 @app.on_event("startup")
