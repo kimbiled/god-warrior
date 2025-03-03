@@ -64,3 +64,69 @@ def create_withdrawal(db: Session, withdrawal: schemas.WithdrawalCreate, user_id
     db.commit()
     db.refresh(db_withdrawal)
     return db_withdrawal
+
+
+def set_buy_price(db: Session, price: schemas.PriceCreate, user_id: int):
+    db_price = models.Price(**price.dict(), user_id=user_id, type="buy")
+    db.add(db_price)
+    db.commit()
+    db.refresh(db_price)
+    return db_price
+
+
+def set_sell_price(db: Session, price: schemas.PriceCreate, user_id: int):
+    db_price = models.Price(**price.dict(), user_id=user_id, type="sell")
+    db.add(db_price)
+    db.commit()
+    db.refresh(db_price)
+    return db_price
+
+
+def get_buy_orders(db: Session, user_id: int):
+    return (
+        db.query(models.Price)
+        .filter(models.Price.user_id == user_id, models.Price.type == "buy")
+        .all()
+    )
+
+
+def get_sell_orders(db: Session, user_id: int):
+    return (
+        db.query(models.Price)
+        .filter(models.Price.user_id == user_id, models.Price.type == "sell")
+        .all()
+    )
+
+
+def get_current_market_prices(db: Session):
+    return db.query(models.CurrentPrice).all()
+
+
+def update_current_market_price(db: Session, currency: str, price: float):
+    db_price = (
+        db.query(models.CurrentPrice)
+        .filter(models.CurrentPrice.currency == currency)
+        .first()
+    )
+    if db_price:
+        db_price.price = price
+    else:
+        db_price = models.CurrentPrice(currency=currency, price=price)
+        db.add(db_price)
+    db.commit()
+    db.refresh(db_price)
+    return db_price
+
+
+def execute_buy_order(db: Session, order: models.Price, user: models.User):
+    # Логика выполнения покупки
+    pass
+
+
+def execute_sell_order(db: Session, order: models.Price, user: models.User):
+    # Логика выполнения продажи
+    pass
+
+
+def get_all_users(db: Session):
+    return db.query(models.User).all()

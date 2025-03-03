@@ -34,11 +34,20 @@ class Price(Base):
     __tablename__ = "prices"
 
     id = Column(Integer, primary_key=True, index=True)
+    currency = Column(String, index=True)
+    price = Column(Float)
     user_id = Column(Integer, ForeignKey("users.id"))
-    buy_price = Column(Float)
-    sell_price = Column(Float)
+    type = Column(String)
 
     user = relationship("User", back_populates="prices")
+
+
+class CurrentPrice(Base):
+    __tablename__ = "current_prices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    currency = Column(String, unique=True, index=True)
+    price = Column(Float)
 
 
 class Withdrawal(Base):

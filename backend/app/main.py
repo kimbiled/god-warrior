@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from . import models, schemas, crud, database
 import http.client
@@ -45,7 +45,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes(15))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -159,23 +159,6 @@ def create_deposit(
     return crud.create_deposit(db=db, deposit=deposit, user_id=current_user.id)
 
 
-@app.post("/prices/", response_model=schemas.Price)
-def create_price(
-    price: schemas.PriceCreate,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
-):
-    return crud.create_price(db=db, price=price, user_id=current_user.id)
-
-
-@app.get("/prices/", response_model=List[schemas.Price])
-def read_prices(
-    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
-):
-    prices = crud.get_prices_by_user(db, user_id=current_user.id)
-    return prices
-
-
 @app.post("/withdraw/", response_model=schemas.Withdrawal)
 def create_withdrawal(
     withdrawal: schemas.WithdrawalCreate,
@@ -185,6 +168,26 @@ def create_withdrawal(
     if current_user.usd_balance < withdrawal.amount:
         raise HTTPException(status_code=400, detail="Insufficient balance")
     return crud.create_withdrawal(db=db, withdrawal=withdrawal, user_id=current_user.id)
+
+
+@app.post("/set-buy-price/", response_model=schemas.Price)
+def set_buy_price(
+    price: schemas.PriceCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return crud.set_buy_price(db=db, price=price, user_id=current_user.id)
+
+
+@app.post("/set-sell-price/", response_model=schemas.Price)
+def set_sell_price(
+    price: schemas.PriceCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return crud.set_sell_price(db=db, price=price, user_id=current_user.id)
+
+
 
 
 @app.on_event("startup")

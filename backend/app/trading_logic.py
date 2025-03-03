@@ -51,47 +51,48 @@ def get_tradingview_price(symbol: str) -> float:
     return price_element
 
 
+def check_prices_and_execute_trades(db: Session):
+    users = crud.get_all_users(db)
+    current_prices_list = crud.get_current_market_prices(db)
+
+    # Преобразуем список текущих цен в словарь
+    current_prices = {price.currency: price.price for price in current_prices_list}
+
+    for user in users:
+        buy_orders = crud.get_buy_orders(db, user_id=user.id)
+        sell_orders = crud.get_sell_orders(db, user_id=user.id)
+
+        for order in buy_orders:
+            if (
+                current_prices.get(order.currency) is not None
+                and current_prices[order.currency] <= order.price
+            ):
+                pass
+
+        for order in sell_orders:
+            if (
+                current_prices.get(order.currency) is not None
+                and current_prices[order.currency] >= order.price
+            ):
+                pass
+
+
 def monitor_trades():
     while True:
         logger.info("Monitoring trades...")
         db: Session = database.SessionLocal()
-        users = db.query(models.User).all()
-        for user in users:
-            prices = crud.get_prices_by_user(db, user_id=user.id)
-            for price in prices:
-                xrp_price = get_tradingview_price("XRPUSD")
-                btc_price = get_tradingview_price("BTCUSD")
+        xrp_price = get_tradingview_price("XRPUSD")
+        btc_price = get_tradingview_price("BTCUSD")
+        current_prices = {
+            "XRPUSD": xrp_price,
+            "BTCUSD": btc_price,
+        }
 
-                if xrp_price is not None and btc_price is not None:
-                    logger.info(f"User ID: {user.id}")
-                    logger.info(f"XRP Price: {xrp_price}")
-                    logger.info(f"BTC Price: {btc_price}")
-                    logger.info(f"User Buy Price: {price.buy_price}")
-                    logger.info(f"User Sell Price: {price.sell_price}")
+        if xrp_price is not None and btc_price is not None:
+            for currency, price in current_prices.items():
+                crud.update_current_market_price(db, currency, price)
 
-                    # Автоматическая покупка XRP
-                    if xrp_price <= price.buy_price:
-                        amount_to_buy = 100  # Change
-                        cost = amount_to_buy * xrp_price
-                        if user.usd_balance >= cost:
-                            user.xrp_balance += amount_to_buy
-                            user.usd_balance -= cost
-                            db.commit()
-                            logger.info(
-                                f"Executed buy trade for user {user.id} at price {xrp_price}"
-                            )
-
-                    # Автоматическая продажа BTC
-                    if btc_price >= price.sell_price:
-                        amount_to_sell = 100  # Change
-                        revenue = amount_to_sell * btc_price
-                        if user.btc_balance >= amount_to_sell:
-                            user.btc_balance -= amount_to_sell
-                            user.usd_balance += revenue
-                            db.commit()
-                            logger.info(
-                                f"Executed sell trade for user {user.id} at price {btc_price}"
-                            )
+            check_prices_and_execute_trades(db)
 
         db.close()
         time.sleep(60)
