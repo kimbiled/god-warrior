@@ -23,9 +23,8 @@ class Deposit(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    wallet_address = Column(String, unique=True, index=True)
     amount = Column(Float)
-    status = Column(String, default="pending")
+    currency = Column(String, default="USD")
 
     user = relationship("User", back_populates="deposits")
 

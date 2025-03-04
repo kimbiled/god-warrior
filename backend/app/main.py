@@ -15,7 +15,6 @@ from .trading_logic import start_monitoring as start_trading_monitoring
 from .blockchain_monitor import start_monitoring as start_blockchain_monitoring
 from fastapi.middleware.cors import CORSMiddleware
 
-
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -35,11 +34,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=database.eng
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Разрешить все источники (лучше указать конкретный: ["http://localhost:3000"])
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Разрешить все методы (GET, POST и т.д.)
-    allow_headers=["*"],  # Разрешить все заголовки
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 
 def get_db():
     db = SessionLocal()
@@ -160,11 +160,16 @@ def create_deposit(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    db_deposit = crud.get_deposit_by_wallet_address(
-        db, wallet_address=deposit.wallet_address
-    )
-    if db_deposit:
-        raise HTTPException(status_code=400, detail="Wallet address already used")
+    if deposit.currency == "USD":
+        current_user.usd_balance += deposit.amount
+    elif deposit.currency == "BTC":
+        current_user.btc_balance += deposit.amount
+    elif deposit.currency == "XRP":
+        current_user.xrp_balance += deposit.amount
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported currency")
+
+    db.commit()
     return crud.create_deposit(db=db, deposit=deposit, user_id=current_user.id)
 
 
@@ -174,8 +179,22 @@ def create_withdrawal(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    if current_user.usd_balance < withdrawal.amount:
-        raise HTTPException(status_code=400, detail="Insufficient balance")
+    if withdrawal.currency == "USD":
+        if current_user.usd_balance < withdrawal.amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        current_user.usd_balance -= withdrawal.amount
+    elif withdrawal.currency == "BTC":
+        if current_user.btc_balance < withdrawal.amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        current_user.btc_balance -= withdrawal.amount
+    elif withdrawal.currency == "XRP":
+        if current_user.xrp_balance < withdrawal.amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        current_user.xrp_balance -= withdrawal.amount
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported currency")
+
+    db.commit()
     return crud.create_withdrawal(db=db, withdrawal=withdrawal, user_id=current_user.id)
 
 

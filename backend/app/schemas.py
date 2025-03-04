@@ -36,14 +36,16 @@ class DepositBase(BaseModel):
     amount: float
 
 
-class DepositCreate(DepositBase):
-    pass
+class DepositCreate(BaseModel):
+    amount: float
+    currency: str
 
 
-class Deposit(DepositBase):
+class Deposit(BaseModel):
     id: int
     user_id: int
-    status: str
+    amount: float
+    currency: str
 
     class Config:
         orm_mode = True
@@ -88,13 +90,15 @@ class WithdrawalBase(BaseModel):
     amount: float
 
 
-class WithdrawalCreate(WithdrawalBase):
-    pass
+class WithdrawalCreate(BaseModel):
+    amount: float
+    currency: str
 
 
-class Withdrawal(WithdrawalBase):
+class Withdrawal(BaseModel):
     id: int
     user_id: int
+    amount: float
     status: str
 
     class Config:
