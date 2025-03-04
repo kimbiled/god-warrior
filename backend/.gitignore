@@ -134,3 +134,6 @@ dmypy.json
 
 # SQLAlchemy
 *.db
+
+# Alembic
+alembic/versions/
