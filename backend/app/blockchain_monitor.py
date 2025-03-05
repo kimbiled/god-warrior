@@ -29,27 +29,3 @@ def check_transaction(wallet_address: str):
     else:
         logger.error(f"Error checking transaction for {wallet_address}: {response.text}")
         return None
-
-def monitor_transactions():
-    while True:
-        logger.info("Monitoring blockchain transactions...")
-        db: Session = database.SessionLocal()
-        deposits = db.query(models.Deposit).filter(models.Deposit.status == "pending").all()
-        for deposit in deposits:
-            transaction_data = check_transaction(deposit.wallet_address)
-            if transaction_data:
-                for tx in transaction_data["txs"]:
-                    if tx["confirmations"] > 0:
-                        deposit.amount = tx["total"] / 100000000
-                        deposit.status = "confirmed"
-                        user = db.query(models.User).filter(models.User.id == deposit.user_id).first()
-                        user.btc_balance += deposit.amount
-                        db.commit()
-                        logger.info(f"Transaction confirmed for {deposit.wallet_address}, amount: {deposit.amount}")
-        db.close()
-        time.sleep(60)
-
-def start_monitoring():
-    print("Starting blockchain monitoring thread...")
-    monitoring_thread = threading.Thread(target=monitor_transactions)
-    monitoring_thread.start()

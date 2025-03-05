@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 from typing import List
 from .trading_logic import start_monitoring as start_trading_monitoring
-from .blockchain_monitor import start_monitoring as start_blockchain_monitoring
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -229,4 +228,3 @@ def get_user_deposit(current_user: models.User = Depends(get_current_user)):
 @app.on_event("startup")
 def on_startup():
     start_trading_monitoring()
-    start_blockchain_monitoring()
