@@ -20,6 +20,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     username: Optional[str] = None
     location: Optional[str] = None
+    avatar: Optional[str] = None
 
 
 class User(UserBase):
