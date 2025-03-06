@@ -1,30 +1,34 @@
 from pydantic import BaseModel
+from typing import Optional, List
 
 
 class UserBase(BaseModel):
     phone_number: str
-    is_active: bool
-    is_admin: bool
-    name: str
-    username: str
-    location: str
-    avatar: str
+    name: Optional[str] = None
+    username: Optional[str] = None
+    location: Optional[str] = None
 
 
-class UserCreate(UserBase):
-    otp: str
+class UserCreate(BaseModel):
+    phone_number: str
+    name: Optional[str] = None
+    username: Optional[str] = None
+    location: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
-    phone_number: str
-    name: str
-    username: str
-    location: str
-    avatar: str
+    name: Optional[str] = None
+    username: Optional[str] = None
+    location: Optional[str] = None
+    avatar: Optional[str] = None
 
 
 class User(UserBase):
     id: int
+    otp: Optional[str] = None
+    avatar: Optional[str] = None
+    is_active: bool
+    is_admin: bool
 
     class Config:
         orm_mode = True
@@ -33,20 +37,6 @@ class User(UserBase):
 class UserLogin(BaseModel):
     phone_number: str
     otp: str
-
-
-class OTP(BaseModel):
-    phone_number: str
-    otp: str
-
-
-class SendOTP(BaseModel):
-    phone_number: str
-
-
-class DepositBase(BaseModel):
-    wallet_address: str
-    amount: float
 
 
 class DepositCreate(BaseModel):
@@ -59,6 +49,20 @@ class Deposit(BaseModel):
     user_id: int
     amount: float
     currency: str
+
+    class Config:
+        orm_mode = True
+
+
+class WithdrawalCreate(BaseModel):
+    amount: float
+    currency: str
+
+
+class Withdrawal(BaseModel):
+    id: int
+    user_id: int
+    amount: float
 
     class Config:
         orm_mode = True
@@ -99,23 +103,13 @@ class CurrentPrice(CurrentPriceBase):
         orm_mode = True
 
 
-class WithdrawalBase(BaseModel):
-    amount: float
+class OTP(BaseModel):
+    phone_number: str
+    otp: str
 
 
-class WithdrawalCreate(BaseModel):
-    amount: float
-    currency: str
-
-
-class Withdrawal(BaseModel):
-    id: int
-    user_id: int
-    amount: float
-    status: str
-
-    class Config:
-        orm_mode = True
+class SendOTP(BaseModel):
+    phone_number: str
 
 
 class UserDeposit(BaseModel):

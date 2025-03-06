@@ -1,4 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    status,
+    BackgroundTasks,
+    File,
+    UploadFile,
+)
 from sqlalchemy.orm import Session
 from . import models, schemas, crud, database
 import http.client
@@ -282,6 +290,34 @@ def update_user(
         raise HTTPException(status_code=404, detail="User not found")
     if user.id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+    updated_user = crud.update_user(db, user, user_update)
+    return updated_user
+
+
+@app.post("/user/{user_id}/avatar", response_model=schemas.User)
+def upload_avatar(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    user = crud.get_user(db, user_id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    file_location = f"avatars/{user_id}_{file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(file.file.read())
+
+    user_update = schemas.UserUpdate(
+        phone_number=user.phone_number,
+        name=user.name,
+        username=user.username,
+        location=user.location,
+        avatar=file_location,
+    )
     updated_user = crud.update_user(db, user, user_update)
     return updated_user
 

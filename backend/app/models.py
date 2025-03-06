@@ -14,7 +14,7 @@ class User(Base):
     name = Column(String, nullable=True)
     username = Column(String, unique=True, index=True, nullable=True)
     location = Column(String, nullable=True)
-    avatar = Column(String, nullable=True)
+    avatar = Column(String, nullable=True, default="default.jpg")
     xrp_balance = Column(Float, default=0.0)
     btc_balance = Column(Float, default=0.0)
     usd_balance = Column(Float, default=0.0)

@@ -2,6 +2,10 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 
 
+def get_user(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+
 def get_user_by_phone(db: Session, phone_number: str):
     return (
         db.query(models.User).filter(models.User.phone_number == phone_number).first()
@@ -9,25 +13,53 @@ def get_user_by_phone(db: Session, phone_number: str):
 
 
 def create_user(db: Session, user: schemas.UserCreate):
-    db_user = models.User(phone_number=user.phone_number, is_active=False)
+    db_user = models.User(
+        phone_number=user.phone_number,
+        name=user.name,
+        username=user.username,
+        location=user.location,
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
 
-def update_user_otp(db: Session, user: models.User, otp: str):
-    user.otp = otp
+def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
+    db_user.name = user_update.name
+    db_user.username = user_update.username
+    db_user.location = user_update.location
+    if user_update.avatar:
+        db_user.avatar = user_update.avatar
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(db_user)
+    return db_user
 
 
-def activate_user(db: Session, user: models.User):
-    user.is_active = True
+def update_user_otp(db: Session, db_user: models.User, otp: str):
+    db_user.otp = otp
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(db_user)
+    return db_user
+
+
+def activate_user(db: Session, db_user: models.User):
+    db_user.is_active = True
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+def get_all_users(db: Session):
+    return db.query(models.User).all()
+
+
+def get_all_deposits(db: Session):
+    return db.query(models.Deposit).all()
+
+
+def get_all_withdrawals(db: Session):
+    return db.query(models.Withdrawal).all()
 
 
 def create_deposit(db: Session, deposit: schemas.DepositCreate, user_id: int):
@@ -126,7 +158,3 @@ def execute_buy_order(db: Session, order: models.Price, user: models.User):
 def execute_sell_order(db: Session, order: models.Price, user: models.User):
     # Логика выполнения продажи
     pass
-
-
-def get_all_users(db: Session):
-    return db.query(models.User).all()
