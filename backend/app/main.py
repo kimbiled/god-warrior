@@ -80,6 +80,15 @@ def get_current_user(
     return user
 
 
+def get_current_admin_user(
+    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+):
+    user = get_current_user(db, token)
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return user
+
+
 def send_otp_via_whatsapp(phone_number: str, otp: str):
     conn = http.client.HTTPSConnection("api.infobip.com")
     payload = json.dumps(
@@ -223,6 +232,58 @@ def get_current_prices(db: Session = Depends(get_db)):
 @app.get("/user-deposit/", response_model=schemas.UserDeposit)
 def get_user_deposit(current_user: models.User = Depends(get_current_user)):
     return {"usd_balance": current_user.usd_balance}
+
+
+@app.get("/admin/users/", response_model=List[schemas.User])
+def get_all_users(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user),
+):
+    return crud.get_all_users(db)
+
+
+@app.get("/admin/deposits/", response_model=List[schemas.Deposit])
+def get_all_deposits(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user),
+):
+    return crud.get_all_deposits(db)
+
+
+@app.get("/admin/withdrawals/", response_model=List[schemas.Withdrawal])
+def get_all_withdrawals(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user),
+):
+    return crud.get_all_withdrawals(db)
+
+
+@app.get("/user/{user_id}", response_model=schemas.User)
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    user = crud.get_user(db, user_id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@app.put("/user/{user_id}", response_model=schemas.User)
+def update_user(
+    user_id: int,
+    user_update: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    user = crud.get_user(db, user_id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    updated_user = crud.update_user(db, user, user_update)
+    return updated_user
 
 
 @app.on_event("startup")

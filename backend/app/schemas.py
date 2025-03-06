@@ -3,15 +3,28 @@ from pydantic import BaseModel
 
 class UserBase(BaseModel):
     phone_number: str
+    is_active: bool
+    is_admin: bool
+    name: str
+    username: str
+    location: str
+    avatar: str
 
 
 class UserCreate(UserBase):
-    pass
+    otp: str
+
+
+class UserUpdate(BaseModel):
+    phone_number: str
+    name: str
+    username: str
+    location: str
+    avatar: str
 
 
 class User(UserBase):
     id: int
-    is_active: bool
 
     class Config:
         orm_mode = True
