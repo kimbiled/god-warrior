@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-const BalanceCircle = () => {
+const XrpBalanceCircle = () => {
   const [balance, setBalance] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -77,4 +77,4 @@ const BalanceCircle = () => {
   );
 };
 
-export default BalanceCircle;
+export default XrpBalanceCircle;
