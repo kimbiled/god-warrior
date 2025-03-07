@@ -17,6 +17,7 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
+    phone_number: str
     name: Optional[str] = None
     username: Optional[str] = None
     location: Optional[str] = None
@@ -114,6 +115,26 @@ class SendOTP(BaseModel):
 
 class UserDeposit(BaseModel):
     usd_balance: float
+
+    class Config:
+        orm_mode = True
+
+
+class TransactionBase(BaseModel):
+    currency: str
+    amount: float
+    transaction_type: str
+    usd_amount: float
+    timestamp: str
+
+
+class TransactionCreate(TransactionBase):
+    pass
+
+
+class Transaction(TransactionBase):
+    id: int
+    user_id: int
 
     class Config:
         orm_mode = True

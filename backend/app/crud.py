@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from fastapi import HTTPException, status
 
 
 def get_user(db: Session, user_id: int):
@@ -12,7 +13,25 @@ def get_user_by_phone(db: Session, phone_number: str):
     )
 
 
+def get_user_by_username(db: Session, username: str):
+    return db.query(models.User).filter(models.User.username == username).first()
+
+
 def create_user(db: Session, user: schemas.UserCreate):
+    db_user_by_phone = get_user_by_phone(db, user.phone_number)
+    if db_user_by_phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number already registered",
+        )
+
+    db_user_by_username = get_user_by_username(db, user.username)
+    if db_user_by_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
+
     db_user = models.User(
         phone_number=user.phone_number,
         name=user.name,
@@ -26,6 +45,7 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 
 def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
+    db_user.phone_number = user_update.phone_number
     db_user.name = user_update.name
     db_user.username = user_update.username
     db_user.location = user_update.location
@@ -148,6 +168,22 @@ def update_current_market_price(db: Session, currency: str, price: float):
     db.commit()
     db.refresh(db_price)
     return db_price
+
+
+def create_transaction(
+    db: Session, transaction: schemas.TransactionCreate, user_id: int
+):
+    db_transaction = models.Transaction(**transaction.dict(), user_id=user_id)
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+
+def get_transactions_by_user(db: Session, user_id: int):
+    return (
+        db.query(models.Transaction).filter(models.Transaction.user_id == user_id).all()
+    )
 
 
 def execute_buy_order(db: Session, order: models.Price, user: models.User):

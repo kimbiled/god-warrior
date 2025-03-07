@@ -322,6 +322,20 @@ def upload_avatar(
     return updated_user
 
 
+@app.get("/user/{user_id}/transactions", response_model=List[schemas.Transaction])
+def get_user_transactions(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    user = crud.get_user(db, user_id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return crud.get_transactions_by_user(db, user_id)
+
+
 @app.on_event("startup")
 def on_startup():
     start_trading_monitoring()

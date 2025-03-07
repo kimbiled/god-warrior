@@ -21,6 +21,7 @@ class User(Base):
     deposits = relationship("Deposit", back_populates="user")
     prices = relationship("Price", back_populates="user")
     withdrawals = relationship("Withdrawal", back_populates="user")
+    transactions = relationship("Transaction", back_populates="user")
 
 
 class Deposit(Base):
@@ -64,3 +65,17 @@ class Withdrawal(Base):
     status = Column(String, default="pending")
 
     user = relationship("User", back_populates="withdrawals")
+
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    currency = Column(String)
+    amount = Column(Float)
+    transaction_type = Column(String)  # "buy" или "sell"
+    usd_amount = Column(Float)
+    timestamp = Column(String)
+
+    user = relationship("User", back_populates="transactions")
