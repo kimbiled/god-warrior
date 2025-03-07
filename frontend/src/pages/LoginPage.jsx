@@ -18,7 +18,7 @@ const LoginPage = () => {
   };
 
   const handleSendOtp = async () => {
-    let formattedPhone = phoneNumber.replace(/^\+|^8/, "");
+    let formattedPhone = phoneNumber.replace(/^\+7|^8/, "7");
 
     try {
       const response = await fetch("http://127.0.0.1:8000/send-otp/", {
@@ -27,12 +27,12 @@ const LoginPage = () => {
         body: JSON.stringify({ phone_number: formattedPhone }),
       });
 
-      if (!response.ok) throw new Error("Ошибка отправки OTP");
+      if (!response.ok) throw new Error("Unable to send OTP");
 
       setIsOtpEnabled(true);
-      showMessage("OTP отправлен!");
+      showMessage("OTP sent!");
     } catch {
-      showMessage("Ошибка сети", true);
+      showMessage("Incorrect phone number", true);
     }
   };
   const handleLogin = async () => {
@@ -43,7 +43,7 @@ const LoginPage = () => {
         body: JSON.stringify({ phone_number: phoneNumber, otp }),
       });
   
-      if (!response.ok) throw new Error("Неверный код");
+      if (!response.ok) throw new Error("Incorrect code");
   
       const data = await response.json();
       console.log("Полученный токен:", data.access_token); // Проверяем токен в консоли
@@ -58,11 +58,10 @@ const LoginPage = () => {
         throw new Error("Токен отсутствует в ответе");
       }
   
-      showMessage("Успешный вход!");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      showMessage("Successfully entered");
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (error) {
-      console.error("Ошибка входа:", error);
-      showMessage("Ошибка входа", true);
+      showMessage("Incorrect code", true);
     }
   };
   
@@ -73,7 +72,7 @@ const LoginPage = () => {
     <div className="flex justify-center items-center h-screen">
       <div className="w-96 p-6 bg-[#03000F] rounded-lg text-white flex flex-col gap-6">
         {message && (
-          <div className={`text-center py-2 px-4 rounded-lg ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
+          <div className={`text-center py-2 px-4 rounded-lg mb-4 ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
             {message.text}
           </div>
         )}
@@ -89,7 +88,7 @@ const LoginPage = () => {
           <div className="relative mb-4 flex flex-row items-center bg-[#222] rounded-full border border-gray-500 px-4 py-3">
             <img src={phone} alt="Phone icon" className="w-6 h-6 mr-3" />
             <input
-              type="number"
+              type="tel"
               placeholder="Enter your phone number"
               className="w-full bg-transparent text-white focus:outline-none placeholder-gray-300"
               value={phoneNumber}

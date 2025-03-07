@@ -37,6 +37,12 @@ const CryptoPageDesktop = () => {
         const response = await fetch("http://127.0.0.1:8000/current-prices/");
         const data = await response.json();
   
+        const newPrices = {};
+        data.forEach(({ currency, price }) => {
+          newPrices[currency] = price;
+        });
+        setPrices(newPrices);
+        
         setPriceHistory((prevHistory) => {
           const updatedHistory = { BTCUSD: [...prevHistory.BTCUSD], XRPUSD: [...prevHistory.XRPUSD] };
   

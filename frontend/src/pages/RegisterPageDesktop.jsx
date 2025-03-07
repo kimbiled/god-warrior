@@ -24,11 +24,11 @@ const RegisterPageDesktop = () => {
         body: JSON.stringify({ phone_number: phoneNumber.replace(/^\+7|^8/, "") }),
       });
 
-      if (!response.ok) throw new Error("Ошибка отправки OTP");
+      if (!response.ok) throw new Error("Unable to send OTP");
       setIsOtpEnabled(true);
-      showMessage("OTP отправлен!");
+      showMessage("OTP send!");
     } catch {
-      showMessage("Ошибка сети", true);
+      showMessage("Incorrect phone number", true);
     }
   };
 
@@ -40,11 +40,11 @@ const RegisterPageDesktop = () => {
         body: JSON.stringify({ phone_number: phoneNumber, otp }),
       });
 
-      if (!response.ok) throw new Error("Неверный код");
-      showMessage("Успешная регистрация!");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      if (!response.ok) throw new Error("Incorrect code");
+      showMessage("Successfully registrated!");
+      setTimeout(() => navigate("/"), 2000);
     } catch {
-      showMessage("Ошибка проверки OTP", true);
+      showMessage("Incorrect code", true);
     }
   };
 
@@ -53,7 +53,7 @@ const RegisterPageDesktop = () => {
       <div className="w-1/2 flex flex-col justify-center items-center">
         <h1 className="text-[45px] font-black text-center mb-36">Ai Ur Crypto.Com</h1>
         {message && (
-          <div className={`text-center py-2 px-4 rounded-lg ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
+          <div className={`text-center py-2 px-4 rounded-lg mb-4 ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
             {message.text}
           </div>
         )}
@@ -61,7 +61,7 @@ const RegisterPageDesktop = () => {
           <div className="relative mb-4 flex items-center bg-[#222] rounded-full border border-gray-500 px-4 py-3">
             <img src={phone} alt="phone" className="w-6 h-6 mr-3" />
             <input
-              type="number"
+              type="tel"
               placeholder="Enter your phone number"
               className="w-full bg-transparent text-white placeholder-gray-300 focus:outline-none"
               value={phoneNumber}

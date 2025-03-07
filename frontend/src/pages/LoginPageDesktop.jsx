@@ -17,7 +17,7 @@ const LoginPageDesktop = () => {
   };
 
   const handleSendOtp = async () => {
-    let formattedPhone = phoneNumber.replace(/^\+|^8/, "");
+    let formattedPhone = phoneNumber.replace(/^\+7|^8/, "7");
 
     try {
       const response = await fetch("http://127.0.0.1:8000/send-otp/", {
@@ -26,12 +26,12 @@ const LoginPageDesktop = () => {
         body: JSON.stringify({ phone_number: formattedPhone }),
       });
 
-      if (!response.ok) throw new Error("Ошибка отправки OTP");
+      if (!response.ok) throw new Error("Unable to send OTP");
 
       setIsOtpEnabled(true);
-      showMessage("OTP отправлен!");
+      showMessage("OTP sent!");
     } catch {
-      showMessage("Ошибка сети", true);
+      showMessage("Incorrect phone number", true);
     }
   };
 
@@ -43,12 +43,12 @@ const LoginPageDesktop = () => {
         body: JSON.stringify({ phone_number: phoneNumber, otp }),
       });
 
-      if (!response.ok) throw new Error("Неверный код");
+      if (!response.ok) throw new Error("Incorrect code");
 
-      showMessage("Успешный вход!");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      showMessage("Successfully entered");
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch {
-      showMessage("Ошибка входа", true);
+      showMessage("Incorrect code", true);
     }
   };
 
@@ -57,11 +57,16 @@ const LoginPageDesktop = () => {
       {/* Левая часть с формой */}
       <div className="w-1/2 flex flex-col justify-center items-center">
         <h1 className="text-[45px] font-black text-center mb-36">Ai Ur Crypto.Com</h1>
+        {message && (
+          <div className={`text-center py-2 px-4 rounded-lg mb-6 ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
+            {message.text}
+          </div>
+        )}
         <div className="w-[400px]">
           <div className="relative mb-4 flex items-center bg-[#222] rounded-full border border-gray-500 px-4 py-3">
             <img src={phone} alt="Phone" className="w-6 h-6 mr-3" />
             <input
-              type="number"
+              type="tel"
               placeholder="Enter your phone number"
               className="w-full bg-transparent text-white placeholder-gray-300 focus:outline-none"
               value={phoneNumber}

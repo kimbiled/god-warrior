@@ -201,7 +201,7 @@ const SalesPage = () => {
           backgroundPosition: "center",
         }}
       >
-        <h2 className="text-lg font-bold text-white mb-4">Выберите валюту</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Choose currency</h2>
         <select
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}

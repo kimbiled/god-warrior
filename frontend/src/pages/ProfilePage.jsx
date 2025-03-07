@@ -9,7 +9,6 @@ const ProfilePage = () => {
         name: "Name",
         username: "Username",
         phone: "Phone",
-        password: "******",
         location: "Location",
       });
     
@@ -39,7 +38,7 @@ const ProfilePage = () => {
                   <img src={bell} alt="bell" className="w-[20px] h-[20px]" />
                 </div>
               </div>
-              <div className="bg-black min-h-screen flex flex-col items-center p-6 text-white">
+              <div className="bg-transparent min-h-screen flex flex-col items-center p-6 text-white">
       <h1 className="text-[18px] font-semibold mb-3">Profile</h1>
       <div className="w-24 h-24  mb-6 flex items-center justify-center">
         <img src={profile} alt="profile" />

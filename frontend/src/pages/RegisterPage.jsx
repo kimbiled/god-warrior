@@ -52,7 +52,7 @@ const RegisterPage = () => {
     <div className="flex justify-center items-center h-screen">
       <div className="w-96 p-6 bg-[#03000F] rounded-lg text-white flex flex-col gap-[88px]">
         {message && (
-          <div className={`text-center py-2 px-4 rounded-lg ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
+          <div className={`text-center py-2 px-4 rounded-lg mb-4 ${message.isError ? "bg-red-500" : "bg-green-500"}`}>
             {message.text}
           </div>
         )}
@@ -66,7 +66,7 @@ const RegisterPage = () => {
           <div className="relative mb-4 flex flex-row items-center bg-[#222] rounded-full border border-gray-500 px-4 py-3">
             <img src={phone} alt="Phone icon" className="w-6 h-6 mr-3" />
             <input
-              type="number"
+              type="tel"
               placeholder="Enter your phone number"
               className="w-full bg-transparent text-white focus:outline-none placeholder-gray-300"
               value={phoneNumber}
