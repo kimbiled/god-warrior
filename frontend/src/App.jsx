@@ -11,6 +11,11 @@ import NotificationPage from "./pages/NotificationPage";
 import LoginPageDesktop from "./pages/LoginPageDesktop";
 import RegisterPageDesktop from "./pages/RegisterPageDesktop";
 import CryptoPageDesktop from './pages/CryptoPageDesktop'
+import SalesPageDesktop from './pages/SellsPageDesktop';
+import BalancePageDesktop from "./pages/BalancePageDesktop";
+import NotificationPageDesktop from "./pages/NotificationPageDesktop";
+import ProfilePageDesktop from "./pages/ProfilePageDesktop";
+
 const isMobile = window.innerWidth <= 768;
 
 function App() {
@@ -20,10 +25,10 @@ function App() {
         <Route path="/" element={isMobile ? <LoginPage /> : <LoginPageDesktop />} />
         <Route path="/register" element={isMobile ? <RegisterPage /> : <RegisterPageDesktop />} />
         <Route path="/dashboard" element={isMobile ? <CryptoPage /> : <CryptoPageDesktop />} />
-        <Route path="/sales" element={<SalesPage />} />
-        <Route path="/balance" element={<BalancePage />} />
-        <Route path="/notification" element={<NotificationPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/sales" element={isMobile ? <SalesPage /> : <SalesPageDesktop />} />
+        <Route path="/balance" element={isMobile? <BalancePage /> : <BalancePageDesktop />} />
+        <Route path="/notification" element={isMobile? <NotificationPage /> : <NotificationPageDesktop />} />
+        <Route path="/profile" element={isMobile? <ProfilePage /> : <ProfilePageDesktop />} />
       </Routes>
     </Router>
   );

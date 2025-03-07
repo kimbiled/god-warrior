@@ -147,7 +147,7 @@ const BalancePage = () => {
         </div>
         
         <div className="flex flex-col gap-4">
-        <button className="w-full h-9 rounded-2xl mx-auto flex items-center justify-center bg-gradient-to-r from-[#4D60FF] to-[#A04DFF] text-white py-3 text-xs font-semibold gap-2">
+        <button className="w-full h-9 rounded-2xl mx-auto flex items-center justify-center bg-gradient-to-l from-[#8628B6] to-[#3A79F9] text-white py-3 text-xs font-semibold gap-2">
          Stop Trade
         </button>
         <button className="w-full h-9 rounded-2xl mx-auto flex items-center justify-center bg-[#259C3B] text-white py-3 font-semibold gap-2">
