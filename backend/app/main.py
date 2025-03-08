@@ -154,7 +154,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid phone number or OTP")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": db_user.phone_number}, expires_delta=access_token_expires
+        data={"sub": db_user.phone_number, "user_id": db_user.id}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "Bearer"}
 
