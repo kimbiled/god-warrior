@@ -114,7 +114,7 @@ class SendOTP(BaseModel):
 
 
 class UserDeposit(BaseModel):
-    usd_balance: float
+    deposits: List[Deposit]
 
     class Config:
         orm_mode = True
@@ -133,6 +133,25 @@ class TransactionCreate(TransactionBase):
 
 
 class Transaction(TransactionBase):
+    id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class DailyBalanceBase(BaseModel):
+    date: str
+    usd_balance: float
+    btc_balance: float
+    xrp_balance: float
+
+
+class DailyBalanceCreate(DailyBalanceBase):
+    pass
+
+
+class DailyBalance(DailyBalanceBase):
     id: int
     user_id: int
 

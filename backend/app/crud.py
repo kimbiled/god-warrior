@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 from fastapi import HTTPException, status
+from datetime import datetime
 
 
 def get_user(db: Session, user_id: int):
@@ -98,6 +99,10 @@ def get_deposit_by_wallet_address(db: Session, wallet_address: str):
     )
 
 
+def get_deposits_by_user(db: Session, user_id: int):
+    return db.query(models.Deposit).filter(models.Deposit.user_id == user_id).all()
+
+
 def create_price(db: Session, price: schemas.PriceCreate, user_id: int):
     db_price = models.Price(**price.dict(), user_id=user_id)
     db.add(db_price)
@@ -186,11 +191,56 @@ def get_transactions_by_user(db: Session, user_id: int):
     )
 
 
-def execute_buy_order(db: Session, order: models.Price, user: models.User):
-    # Логика выполнения покупки
-    pass
+def create_daily_balance(db: Session, user_id: int):
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    existing_balance = (
+        db.query(models.DailyBalance)
+        .filter(
+            models.DailyBalance.user_id == user_id, models.DailyBalance.date == today
+        )
+        .first()
+    )
+    if existing_balance:
+        return existing_balance
+
+    user = get_user(db, user_id)
+    daily_balance = models.DailyBalance(
+        user_id=user_id,
+        date=today,
+        usd_balance=user.usd_balance,
+        btc_balance=user.btc_balance,
+        xrp_balance=user.xrp_balance,
+    )
+    db.add(daily_balance)
+    db.commit()
+    db.refresh(daily_balance)
+    return daily_balance
 
 
-def execute_sell_order(db: Session, order: models.Price, user: models.User):
-    # Логика выполнения продажи
-    pass
+def get_daily_balance(db: Session, user_id: int, date: str):
+    return (
+        db.query(models.DailyBalance)
+        .filter(
+            models.DailyBalance.user_id == user_id, models.DailyBalance.date == date
+        )
+        .first()
+    )
+
+
+def calculate_daily_earnings(db: Session, user_id: int):
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    daily_balance = get_daily_balance(db, user_id, today)
+    if not daily_balance:
+        return {"message": "No daily balance found for today"}
+
+    user = get_user(db, user_id)
+    usd_earnings = user.usd_balance - daily_balance.usd_balance
+    btc_earnings = user.btc_balance - daily_balance.btc_balance
+    xrp_earnings = user.xrp_balance - daily_balance.xrp_balance
+
+    # Преобразование заработка в доллары (пример, нужно заменить на актуальные курсы)
+    btc_to_usd = btc_earnings * 50000  # Пример курса BTC к USD
+    xrp_to_usd = xrp_earnings * 1  # Пример курса XRP к USD
+
+    total_earnings = usd_earnings + btc_to_usd + xrp_to_usd
+    return {"total_earnings_usd": total_earnings}

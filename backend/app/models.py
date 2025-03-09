@@ -22,6 +22,7 @@ class User(Base):
     prices = relationship("Price", back_populates="user")
     withdrawals = relationship("Withdrawal", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
+    daily_balances = relationship("DailyBalance", back_populates="user")
 
 
 class Deposit(Base):
@@ -79,3 +80,16 @@ class Transaction(Base):
     timestamp = Column(String)
 
     user = relationship("User", back_populates="transactions")
+
+
+class DailyBalance(Base):
+    __tablename__ = "daily_balances"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    date = Column(String, index=True)
+    usd_balance = Column(Float)
+    btc_balance = Column(Float)
+    xrp_balance = Column(Float)
+
+    user = relationship("User", back_populates="daily_balances")

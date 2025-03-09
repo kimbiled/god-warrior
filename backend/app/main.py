@@ -154,7 +154,8 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid phone number or OTP")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": db_user.phone_number, "user_id": db_user.id}, expires_delta=access_token_expires
+        data={"sub": db_user.phone_number, "user_id": db_user.id},
+        expires_delta=access_token_expires,
     )
     return {"access_token": access_token, "token_type": "Bearer"}
 
@@ -238,8 +239,11 @@ def get_current_prices(db: Session = Depends(get_db)):
 
 
 @app.get("/user-deposit/", response_model=schemas.UserDeposit)
-def get_user_deposit(current_user: models.User = Depends(get_current_user)):
-    return {"usd_balance": current_user.usd_balance}
+def get_user_deposit(
+    current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    deposits = crud.get_deposits_by_user(db, user_id=current_user.id)
+    return {"deposits": deposits}
 
 
 @app.get("/admin/users/", response_model=List[schemas.User])
