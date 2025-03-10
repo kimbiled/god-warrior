@@ -279,6 +279,8 @@ def get_user_by_id(
     user = crud.get_user(db, user_id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     return user
 
 
@@ -338,6 +340,27 @@ def get_user_transactions(
     if user.id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return crud.get_transactions_by_user(db, user_id)
+
+
+@app.get("/user/{user_id}/daily-earnings", response_model=float)
+def get_daily_earnings(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return crud.calculate_daily_earnings(db, user_id)
+
+
+@app.delete("/admin/delete-user/{user_id}", response_model=dict)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user),
+):
+    crud.delete_user(db, user_id=user_id)
+    return {"message": "User deleted successfully"}
 
 
 @app.on_event("startup")

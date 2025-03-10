@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from .database import Base
+from datetime import datetime
 
 
 class User(Base):
@@ -14,7 +15,7 @@ class User(Base):
     name = Column(String, nullable=True)
     username = Column(String, unique=True, index=True, nullable=True)
     location = Column(String, nullable=True)
-    avatar = Column(String, nullable=True, default="default.jpg")
+    avatar = Column(String, nullable=True)
     xrp_balance = Column(Float, default=0.0)
     btc_balance = Column(Float, default=0.0)
     usd_balance = Column(Float, default=0.0)
@@ -87,9 +88,9 @@ class DailyBalance(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    date = Column(String, index=True)
-    usd_balance = Column(Float)
-    btc_balance = Column(Float)
-    xrp_balance = Column(Float)
+    date = Column(DateTime, default=datetime.utcnow)
+    usd_balance = Column(Float, default=0.0)
+    btc_balance = Column(Float, default=0.0)
+    xrp_balance = Column(Float, default=0.0)
 
     user = relationship("User", back_populates="daily_balances")

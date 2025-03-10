@@ -26,22 +26,19 @@ def create_user(db: Session, user: schemas.UserCreate):
             detail="Phone number already registered",
         )
 
-    db_user_by_username = get_user_by_username(db, user.username)
-    if db_user_by_username:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
-        )
-
     db_user = models.User(
         phone_number=user.phone_number,
         name=user.name,
-        username=user.username,
         location=user.location,
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    db_user.username = f"user{db_user.id}"
+    db.commit()
+    db.refresh(db_user)
+
     return db_user
 
 
@@ -192,21 +189,11 @@ def get_transactions_by_user(db: Session, user_id: int):
 
 
 def create_daily_balance(db: Session, user_id: int):
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    existing_balance = (
-        db.query(models.DailyBalance)
-        .filter(
-            models.DailyBalance.user_id == user_id, models.DailyBalance.date == today
-        )
-        .first()
-    )
-    if existing_balance:
-        return existing_balance
-
     user = get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     daily_balance = models.DailyBalance(
         user_id=user_id,
-        date=today,
         usd_balance=user.usd_balance,
         btc_balance=user.btc_balance,
         xrp_balance=user.xrp_balance,
@@ -217,7 +204,7 @@ def create_daily_balance(db: Session, user_id: int):
     return daily_balance
 
 
-def get_daily_balance(db: Session, user_id: int, date: str):
+def get_daily_balance(db: Session, user_id: int, date: datetime):
     return (
         db.query(models.DailyBalance)
         .filter(
@@ -228,19 +215,43 @@ def get_daily_balance(db: Session, user_id: int, date: str):
 
 
 def calculate_daily_earnings(db: Session, user_id: int):
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    daily_balance = get_daily_balance(db, user_id, today)
-    if not daily_balance:
-        return {"message": "No daily balance found for today"}
-
     user = get_user(db, user_id)
-    usd_earnings = user.usd_balance - daily_balance.usd_balance
-    btc_earnings = user.btc_balance - daily_balance.btc_balance
-    xrp_earnings = user.xrp_balance - daily_balance.xrp_balance
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # Преобразование заработка в доллары (пример, нужно заменить на актуальные курсы)
-    btc_to_usd = btc_earnings * 50000  # Пример курса BTC к USD
-    xrp_to_usd = xrp_earnings * 1  # Пример курса XRP к USD
+    current_prices = get_current_market_prices(db)
+    btc_price = next(
+        (price.price for price in current_prices if price.currency == "BTC"), 0
+    )
+    xrp_price = next(
+        (price.price for price in current_prices if price.currency == "XRP"), 0
+    )
 
-    total_earnings = usd_earnings + btc_to_usd + xrp_to_usd
-    return {"total_earnings_usd": total_earnings}
+    start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    daily_balance = get_daily_balance(db, user_id, start_of_day)
+    if not daily_balance:
+        daily_balance = create_daily_balance(db, user_id)
+
+    current_balance_usd = (
+        (user.btc_balance * btc_price)
+        + (user.xrp_balance * xrp_price)
+        + user.usd_balance
+    )
+    start_balance_usd = (
+        (daily_balance.btc_balance * btc_price)
+        + (daily_balance.xrp_balance * xrp_price)
+        + daily_balance.usd_balance
+    )
+
+    daily_earnings = current_balance_usd - start_balance_usd
+
+    return daily_earnings
+
+
+def delete_user(db: Session, user_id: int):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user:
+        db.delete(user)
+        db.commit()
+    else:
+        raise HTTPException(status_code=404, detail="User not found")

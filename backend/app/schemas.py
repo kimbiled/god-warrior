@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 
 
 class UserBase(BaseModel):
@@ -9,18 +10,11 @@ class UserBase(BaseModel):
     location: Optional[str] = None
 
 
-class UserCreate(BaseModel):
-    phone_number: str
-    name: Optional[str] = None
-    username: Optional[str] = None
-    location: Optional[str] = None
+class UserCreate(UserBase):
+    pass
 
 
-class UserUpdate(BaseModel):
-    phone_number: str
-    name: Optional[str] = None
-    username: Optional[str] = None
-    location: Optional[str] = None
+class UserUpdate(UserBase):
     avatar: Optional[str] = None
 
 
@@ -30,6 +24,9 @@ class User(UserBase):
     avatar: Optional[str] = None
     is_active: bool
     is_admin: bool
+    usd_balance: float
+    btc_balance: float
+    xrp_balance: float
 
     class Config:
         orm_mode = True
@@ -141,7 +138,7 @@ class Transaction(TransactionBase):
 
 
 class DailyBalanceBase(BaseModel):
-    date: str
+    date: datetime
     usd_balance: float
     btc_balance: float
     xrp_balance: float
