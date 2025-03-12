@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import login from "../img/login.png";
 import phone from "../img/phone.png";
 import mail from "../img/mail.png";
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
@@ -35,36 +36,50 @@ const LoginPage = () => {
       showMessage("Incorrect phone number", true);
     }
   };
-  const handleLogin = async () => {
-    try {
-      const response = await fetch("http://127.0.0.1:8000/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone_number: phoneNumber, otp }),
-      });
-  
-      if (!response.ok) throw new Error("Incorrect code");
-  
-      const data = await response.json();
-      console.log("Полученный токен:", data.access_token); // Проверяем токен в консоли
-  
-      if (data.access_token) {
-        if (rememberMe) {
-          localStorage.setItem("token", data.access_token);
-        } else {
-          sessionStorage.setItem("token", data.access_token);
+    const handleLogin = async () => {
+      try {
+        // Отправляем запрос на сервер для входа
+        const response = await fetch("http://127.0.0.1:8000/login/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone_number: phoneNumber, otp }),
+        });
+    
+        // Проверяем, успешен ли ответ
+        if (!response.ok) {
+          throw new Error("Incorrect code");
         }
-      } else {
-        throw new Error("Токен отсутствует в ответе");
+    
+        // Получаем данные из ответа
+        const data = await response.json();
+        console.log("Полученный токен:", data.access_token); // Проверяем токен в консоли
+    
+        // Проверяем, что токен присутствует в ответе
+        if (!data.access_token) {
+          throw new Error("Токен отсутствует в ответе");
+        }
+    
+        const decodedToken = jwtDecode(data.access_token);
+  const userId = decodedToken.user_id; // Предположим, что user_id есть в токене
+    
+  if (rememberMe) {
+    localStorage.setItem("token", data.access_token); // Сохраняем токен в localStorage
+    localStorage.setItem("user_id", userId); // Сохраняем user_id в localStorage
+  } else {
+    sessionStorage.setItem("token", data.access_token); // Сохраняем токен в sessionStorage
+    sessionStorage.setItem("user_id", userId); // Сохраняем user_id в sessionStorage
+  }
+    
+        // Показываем сообщение об успешном входе
+        showMessage("Successfully entered");
+    
+        // Перенаправляем на страницу dashboard через 1.5 секунды
+        setTimeout(() => navigate("/dashboard"), 1500);
+      } catch (error) {
+        console.error("Ошибка при входе:", error); // Логируем ошибку для отладки
+        showMessage("Incorrect code", true); // Показываем сообщение об ошибке
       }
-  
-      showMessage("Successfully entered");
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (error) {
-      showMessage("Incorrect code", true);
-    }
-  };
-  
+    };
   
   
 

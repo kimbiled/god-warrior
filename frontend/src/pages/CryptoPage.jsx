@@ -17,55 +17,56 @@ const CryptoPage = () => {
   const [hovered, setHovered] = useState(false);
   const [sellingAmount, setSellingAmount] = useState(1);
   const [prices, setPrices] = useState({ BTCUSD: 0, XRPUSD: 0 });
-
   const [priceChanges, setPriceChanges] = useState({});
-const [priceHistory, setPriceHistory] = useState({ BTCUSD: [], XRPUSD: [] });
-useEffect(() => {
-  const fetchPrices = async () => {
-    try {
-      const response = await fetch("http://127.0.0.1:8000/current-prices/");
-      const data = await response.json();
-      console.log(data);
+  const [priceHistory, setPriceHistory] = useState({ BTCUSD: [], XRPUSD: [] });
+  const [isAddCashModalOpen, setIsAddCashModalOpen] = useState(false);
+  const [isAddCryptoModalOpen, setIsAddCryptoModalOpen] = useState(false);
+  const [cashAmount, setCashAmount] = useState(1); // Минимальное значение 1
+  const [cryptoAmount, setCryptoAmount] = useState(1); // Минимальное значение 1
+  const [cryptoCurrency, setCryptoCurrency] = useState("BTC");
 
-      // Обновляем цены
-      const newPrices = {};
-      data.forEach(({ currency, price }) => {
-        newPrices[currency] = price;
-      });
-      setPrices(newPrices); // <-- добавил обновление prices
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
 
-      // Обновляем историю цен
-      setPriceHistory((prevHistory) => {
-        const updatedHistory = { ...prevHistory };
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/current-prices/");
+        const data = await response.json();
+        console.log(data);
+
+        const newPrices = {};
         data.forEach(({ currency, price }) => {
-          if (!updatedHistory[currency]) updatedHistory[currency] = [];
-          if (updatedHistory[currency].length >= 20) updatedHistory[currency].shift();
-          updatedHistory[currency].push(price);
+          newPrices[currency] = price;
         });
-        return updatedHistory;
-      });
+        setPrices(newPrices);
 
-      // Обновляем процентные изменения цен
-      setPriceChanges((prevChanges) => {
-        const updatedChanges = {};
-        data.forEach(({ currency, price }) => {
-          const previousPrice = priceHistory[currency]?.slice(-1)[0] || price;
-          updatedChanges[currency] = ((price - previousPrice) / previousPrice) * 100;
+        setPriceHistory((prevHistory) => {
+          const updatedHistory = { ...prevHistory };
+          data.forEach(({ currency, price }) => {
+            if (!updatedHistory[currency]) updatedHistory[currency] = [];
+            if (updatedHistory[currency].length >= 20) updatedHistory[currency].shift();
+            updatedHistory[currency].push(price);
+          });
+          return updatedHistory;
         });
-        return updatedChanges;
-      });
-    } catch (error) {
-      console.error("Ошибка загрузки цен:", error);
-    }
-  };
 
-  fetchPrices();
-  const interval = setInterval(fetchPrices, 25000);
-  return () => clearInterval(interval);
-}, []); 
+        setPriceChanges((prevChanges) => {
+          const updatedChanges = {};
+          data.forEach(({ currency, price }) => {
+            const previousPrice = priceHistory[currency]?.slice(-1)[0] || price;
+            updatedChanges[currency] = ((price - previousPrice) / previousPrice) * 100;
+          });
+          return updatedChanges;
+        });
+      } catch (error) {
+        console.error("Ошибка загрузки цен:", error);
+      }
+    };
 
-
-
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 25000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSwap = () => {
     setHovered(true);
@@ -80,6 +81,63 @@ useEffect(() => {
     return isSwapped
       ? (sellingAmount * prices.XRPUSD) / prices.BTCUSD
       : (sellingAmount * prices.BTCUSD) / prices.XRPUSD;
+  };
+
+  const handleAddCashSubmit = async () => {
+    const payload = {
+      amount: cashAmount,
+      currency: "USD",
+    };
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/deposit/", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      console.log("Cash added:", data);
+      setIsAddCashModalOpen(false);
+    } catch (error) {
+      console.error("Error adding cash:", error);
+    }
+  };
+
+  const handleAddCryptoSubmit = async () => {
+    const payload = {
+      amount: cryptoAmount,
+      currency: cryptoCurrency,
+    };
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/deposit/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      console.log("Crypto added:", data);
+      setIsAddCryptoModalOpen(false);
+    } catch (error) {
+      console.error("Error adding crypto:", error);
+    }
+  };
+
+  const handleCashAmountChange = (e) => {
+    const value = Math.max(1, Number(e.target.value)); // Убедимся, что значение не меньше 1
+    setCashAmount(value);
+  };
+
+  const handleCryptoAmountChange = (e) => {
+    const value = Math.max(1, Number(e.target.value)); // Убедимся, что значение не меньше 1
+    setCryptoAmount(value);
   };
 
   return (
@@ -99,31 +157,101 @@ useEffect(() => {
       </div>
 
       <div className="flex gap-3 justify-center items-center p-4">
-      {/* Add Cash */}
-      <button className="flex items-center justify-center w-[100px] h-9 rounded-full border border-purple-500 text-white sm75:text-xs sm20:text-[10px] font-medium bg-transparent">
-        <BsPlus size={24} />
-        Add Cash
-      </button>
+        <button
+          className="flex items-center justify-center w-[100px] h-9 rounded-full border border-purple-500 text-white sm75:text-xs sm20:text-[10px] font-medium bg-transparent"
+          onClick={() => setIsAddCashModalOpen(true)}
+        >
+          <BsPlus size={24} />
+          Add Cash
+        </button>
 
-      {/* Add Crypto */}
-      <button className="flex items-center justify-center  w-[110px] h-9 rounded-full border border-purple-500 text-white sm75:text-xs sm20:text-[10px] font-medium bg-transparent">
-        <BsPlus size={24} />
-        Add Crypto
-      </button>
+        <button
+          className="flex items-center justify-center w-[110px] h-9 rounded-full border border-purple-500 text-white sm75:text-xs sm20:text-[10px] font-medium bg-transparent"
+          onClick={() => setIsAddCryptoModalOpen(true)}
+        >
+          <BsPlus size={24} />
+          Add Crypto
+        </button>
 
-      {/* Cash Out */}
-      <button className="flex items-center justify-center  w-[100px] h-9 rounded-full text-white sm75:text-xs sm20:text-[10px] font-medium bg-gradient-to-l from-[#8628B6] to-[#3A79F9]">
-       <img src={arrow} alt="arrow" width={15} height={15} className="mr-2"/>
-        Cash Out
-      </button>
-    </div>
+        <button className="flex items-center justify-center w-[100px] h-9 rounded-full text-white sm75:text-xs sm20:text-[10px] font-medium bg-gradient-to-l from-[#8628B6] to-[#3A79F9]">
+          <img src={arrow} alt="arrow" width={15} height={15} className="mr-2" />
+          Cash Out
+        </button>
+      </div>
+
+      {isAddCashModalOpen && (
+        <div className="fixed inset-0 bg-black z-[1000] bg-opacity-50 flex items-center justify-center">
+          <div className="bg-[#07051B] p-6 rounded-lg w-80">
+            <h2 className="text-lg font-bold mb-4">Add Cash</h2>
+            <input
+              type="number"
+              className="w-full p-2 mb-4 bg-transparent border border-gray-600 rounded text-white"
+              placeholder="Amount"
+              value={cashAmount}
+              min="1" // Минимальное значение 1
+              onChange={handleCashAmountChange} // Обработчик изменений
+            />
+            <div className="flex justify-end">
+              <button
+                className="bg-gradient-to-l from-[#8628B6] to-[#3A79F9] text-white px-4 py-2 rounded-[30px]"
+                onClick={handleAddCashSubmit}
+              >
+                Submit
+              </button>
+              <button
+                className="ml-2 bg-gray-500 text-white px-4 py-2 rounded-[30px]"
+                onClick={() => setIsAddCashModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAddCryptoModalOpen && (
+        <div className="fixed inset-0 bg-black z-[1000] bg-opacity-50 flex items-center justify-center">
+          <div className="bg-[#07051B] p-6 rounded-lg w-80">
+            <h2 className="text-lg font-bold mb-4">Add Crypto</h2>
+            <input
+              type="number"
+              className="w-full p-2 mb-4 bg-transparent border border-gray-600 rounded text-white"
+              placeholder="Amount"
+              value={cryptoAmount}
+              min="1" // Минимальное значение 1
+              onChange={handleCryptoAmountChange} // Обработчик изменений
+            />
+            <select
+              className="w-full p-2 mb-4 bg-[#07051B] border border-gray-600 rounded text-white"
+              value={cryptoCurrency}
+              onChange={(e) => setCryptoCurrency(e.target.value)}
+            >
+              <option value="BTC">BTC</option>
+              <option value="XRP">XRP</option>
+            </select>
+            <div className="flex justify-end">
+              <button
+                className="bg-gradient-to-l from-[#8628B6] to-[#3A79F9] text-white px-4 py-2 rounded-[30px]"
+                onClick={handleAddCryptoSubmit}
+              >
+                Submit
+              </button>
+              <button
+                className="ml-2 bg-gray-600 text-white px-4 py-2 rounded-[30px]"
+                onClick={() => setIsAddCryptoModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="text-lg font-bold mb-4 text-left">Securely Buy and Sell Crypto</h2>
       </div>
 
       <div className="flex flex-col w-full gap-2 relative">
-        {/* SELLING */}
         <div
           className={`p-4 w-full rounded-lg transition-all duration-300 ${isSwapped ? "order-2" : "order-1"}`}
           style={{ backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" }}
@@ -146,7 +274,6 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Swap Button */}
         <div
           className={`w-[26px] h-[26px] bg-[#2B2058] rounded-lg absolute flex items-center justify-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer ${hovered ? "scale-125 transition-transform duration-200" : ""}`}
           onClick={handleSwap}
@@ -154,7 +281,6 @@ useEffect(() => {
           <img src={transfer} alt="transfer" width={14} height={14} />
         </div>
 
-        {/* BUYING */}
         <div
           className={`p-4 w-full rounded-lg transition-all duration-300 ${isSwapped ? "order-1" : "order-2"}`}
           style={{ backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" }}
@@ -172,7 +298,7 @@ useEffect(() => {
 
       <h2 className="text-lg font-bold mt-6 mb-4">AI Trades</h2>
       <div>
-      <Trades priceChanges={priceChanges} priceHistory={priceHistory} />
+        <Trades priceChanges={priceChanges} priceHistory={priceHistory} />
       </div>
 
       <Footer />
