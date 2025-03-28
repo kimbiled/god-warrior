@@ -21,8 +21,17 @@ from sqlalchemy.orm import sessionmaker
 from typing import List
 from .trading_logic import start_monitoring as start_trading_monitoring
 from fastapi.middleware.cors import CORSMiddleware
+import paypalrestsdk
 
 load_dotenv()
+
+paypalrestsdk.configure(
+    {
+        "mode": os.getenv("PAYPAL_MODE", "sandbox"),  # "sandbox" или "live"
+        "client_id": os.getenv("PAYPAL_CLIENT_ID"),
+        "client_secret": os.getenv("PAYPAL_CLIENT_SECRET"),
+    }
+)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
@@ -361,6 +370,41 @@ def delete_user(
 ):
     crud.delete_user(db, user_id=user_id)
     return {"message": "User deleted successfully"}
+
+
+@app.post("/paypal/create-payment", response_model=dict)
+def create_paypal_payment(
+    amount: float,
+    currency: str = "USD",
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    payment = paypalrestsdk.Payment(
+        {
+            "intent": "sale",
+            "payer": {"payment_method": "paypal"},
+            "transactions": [
+                {
+                    "amount": {"total": f"{amount:.2f}", "currency": currency},
+                    "description": f"Payment by {current_user.username}",
+                }
+            ],
+            "redirect_urls": {
+                "return_url": "http://localhost:8000/paypal/execute-payment",
+                "cancel_url": "http://localhost:8000/paypal/cancel-payment",
+            },
+        }
+    )
+
+    if payment.create():
+        return {"payment_id": payment.id, "approval_url": payment.links[1].href}
+    else:
+        raise HTTPException(status_code=400, detail=payment.error)
+
+
+@app.get("/paypal/cancel-payment", response_model=dict)
+def cancel_paypal_payment():
+    return {"message": "Payment was canceled"}
 
 
 @app.on_event("startup")
