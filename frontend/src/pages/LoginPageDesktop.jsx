@@ -3,10 +3,13 @@ import login from '../img/login.png';
 import phone from '../img/phone.png';
 import mail from '../img/mail.png';
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+
 
 const LoginPageDesktop = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isOtpEnabled, setIsOtpEnabled] = useState(false);
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
@@ -35,20 +38,50 @@ const LoginPageDesktop = () => {
     }
   };
 
+
+
   const handleLogin = async () => {
     try {
+      // Отправляем запрос на сервер для входа
       const response = await fetch("http://127.0.0.1:8000/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone_number: phoneNumber, otp }),
       });
-
-      if (!response.ok) throw new Error("Incorrect code");
-
+  
+      // Проверяем, успешен ли ответ
+      if (!response.ok) {
+        throw new Error("Incorrect code");
+      }
+  
+      // Получаем данные из ответа
+      const data = await response.json();
+      console.log("Полученный токен:", data.access_token); // Проверяем токен в консоли
+  
+      // Проверяем, что токен присутствует в ответе
+      if (!data.access_token) {
+        throw new Error("Токен отсутствует в ответе");
+      }
+  
+      const decodedToken = jwtDecode(data.access_token);
+const userId = decodedToken.user_id; // Предположим, что user_id есть в токене
+  
+if (rememberMe) {
+  localStorage.setItem("token", data.access_token); // Сохраняем токен в localStorage
+  localStorage.setItem("user_id", userId); // Сохраняем user_id в localStorage
+} else {
+  sessionStorage.setItem("token", data.access_token); // Сохраняем токен в sessionStorage
+  sessionStorage.setItem("user_id", userId); // Сохраняем user_id в sessionStorage
+}
+  
+      // Показываем сообщение об успешном входе
       showMessage("Successfully entered");
+  
+      // Перенаправляем на страницу dashboard через 1.5 секунды
       setTimeout(() => navigate("/dashboard"), 1500);
-    } catch {
-      showMessage("Incorrect code", true);
+    } catch (error) {
+      console.error("Ошибка при входе:", error); // Логируем ошибку для отладки
+      showMessage("Incorrect code", true); // Показываем сообщение об ошибке
     }
   };
 

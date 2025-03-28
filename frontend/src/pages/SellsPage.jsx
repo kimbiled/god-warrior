@@ -50,7 +50,31 @@ const SalesPage = () => {
     updateTooltipPositions(sellPriceRef, sellPrice, 0, 10);
     updateTooltipPositions(sellPercentageRef, sellPercentage, 0, 100);
   }, [sellAmount, sellPrice, sellPercentage]);
+  const [balance, setBalance] = useState(0);
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/user-deposit/", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance);
+        } else {
+          console.error("Ошибка при получении баланса");
+        }
+      } catch (error) {
+        console.error("Ошибка:", error);
+      }
+    };
+
+    fetchBalance();
+  }, [token]);
   // Связь между percentage и amount
   useEffect(() => {
     const newAmount = (sellPercentage / 100) * 10; // 10 - максимальное значение для sellAmount
@@ -129,31 +153,7 @@ const SalesPage = () => {
     }
   };
 
-  const [balance, setBalance] = useState(0);
-  useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/user-deposit/", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
 
-        if (response.ok) {
-          const data = await response.json();
-          setBalance(data.balance);
-        } else {
-          console.error("Ошибка при получении баланса");
-        }
-      } catch (error) {
-        console.error("Ошибка:", error);
-      }
-    };
-
-    fetchBalance();
-  }, [token]);
 
   // Обработчики изменений
   const handlePriceChange = (value) => {

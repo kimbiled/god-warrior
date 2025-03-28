@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-const XrpBalanceCircle = () => {
+const XrpBalanceCircle = ({ onBalanceUpdate }) => {
   const [balance, setBalance] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -14,36 +14,47 @@ const XrpBalanceCircle = () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/user-deposit/", {
           method: "GET",
-          headers: { 
+          headers: {
             "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         if (!response.ok) throw new Error("Ошибка при получении данных");
+        console.log("запрос отправлен");
 
         const data = await response.json();
-        const maxBalance = 200000; // Можно изменить на динамическое значение
-        const balanceValue = data.usd_balance || 0;
+        console.log("Полученные данные:", data);
+
+        // Ищем объект, где currency === "XRP"
+        const xrpDeposit = data.deposits.find((deposit) => deposit.currency === "XRP");
+        const balanceValue = xrpDeposit ? xrpDeposit.amount : 0;
 
         setBalance(balanceValue);
+
+        const maxBalance = 200000; // Можно изменить
         setPercentage(Math.min((balanceValue / maxBalance) * 100, 100)); // Ограничение 100%
+
+        // Передаем данные в родительский компонент
+        if (onBalanceUpdate) {
+          onBalanceUpdate(balanceValue);
+        }
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
       }
     };
 
     fetchBalance();
-  }, [token]);
+  }, [token, onBalanceUpdate]);
 
   return (
-    <div className="relative w-48 h-48 lg:w-80 lg:h-80 flex items-center justify-center">
+    <div className="relative w-48 h-48 lg:w-60 lg:h-60 flex items-center justify-center">
       {/* Внешний пунктирный круг */}
       <div className="absolute w-full h-full rounded-full border-[3px] border-dashed border-blue-500 opacity-50"></div>
 
       {/* Средний круг */}
       <div className="absolute w-[90%] h-[90%] rounded-full border-[6px] border-solid border-[#1A1A3D]"></div>
-      
+
       {/* Внутренний прогресс-бар */}
       <div className="absolute w-[80%] h-[80%]">
         <CircularProgressbar
@@ -57,7 +68,7 @@ const XrpBalanceCircle = () => {
           })}
         />
       </div>
-      
+
       {/* Градиент для прогресса */}
       <svg style={{ height: 0 }}>
         <defs>
@@ -71,7 +82,9 @@ const XrpBalanceCircle = () => {
       {/* Баланс в центре */}
       <div className="absolute text-center">
         <p className="text-gray-300 sm20:text-sm lg:text-[22px]">Balance</p>
-        <p className="sm20:text-xl lg:text-[30px] font-bold bg-gradient-to-r from-[#3355F3] to-[#C333F3] bg-clip-text text-transparent">${balance.toFixed(2)}</p>
+        <p className="sm20:text-xl lg:text-[30px] font-bold bg-gradient-to-r from-[#3355F3] to-[#C333F3] bg-clip-text text-transparent">
+          ${balance.toFixed(2)}
+        </p>
       </div>
     </div>
   );

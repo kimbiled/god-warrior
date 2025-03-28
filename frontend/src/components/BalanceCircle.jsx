@@ -10,7 +10,7 @@ const BalanceCircle = () => {
   useEffect(() => {
     const fetchBalance = async () => {
       if (!token) return;
-
+  
       try {
         const response = await fetch("http://127.0.0.1:8000/user-deposit/", {
           method: "GET",
@@ -19,22 +19,29 @@ const BalanceCircle = () => {
             "Content-Type": "application/json"
           }
         });
-
+  
         if (!response.ok) throw new Error("Ошибка при получении данных");
-
+  
         const data = await response.json();
-        const maxBalance = 200000; // Можно изменить на динамическое значение
-        const balanceValue = data.usd_balance || 0;
-
+        console.log("Полученные данные:", data);
+  
+        // Ищем объект, где currency === "XRP"
+        const xrpDeposit = data.deposits.find(deposit => deposit.currency === "USD");
+        const balanceValue = xrpDeposit ? xrpDeposit.amount : 0;
+  
         setBalance(balanceValue);
+  
+        const maxBalance = 200000; // Можно изменить
         setPercentage(Math.min((balanceValue / maxBalance) * 100, 100)); // Ограничение 100%
+        
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
       }
     };
-
+  
     fetchBalance();
   }, [token]);
+  
 
   return (
     <div className="relative w-48 h-48 lg:w-80 lg:h-80 flex items-center justify-center">

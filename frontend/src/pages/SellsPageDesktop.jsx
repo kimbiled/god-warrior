@@ -56,101 +56,139 @@ const SalesPageDesktop = () => {
       setSellPrice(parseFloat(newAmount.toFixed(2)));
     }, [sellPercentage]);
   
-    const handleBuy = async () => {
-      const totalCost = price * amount;
-  
-      if (totalCost > balance) {
-        alert("Недостаточно средств на балансе для покупки.");
-        return;
-      }
-  
-      const buyData = {
-        currency: currency,
-        price: price,
-        amount: amount,
-      };
-  
-      try {
-        const response = await fetch("http://127.0.0.1:8000/set-buy-price/", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(buyData),
-        });
-  
-        if (response.ok) {
-          alert("Покупка успешно выполнена!");
-        } else {
-          alert("Ошибка при выполнении покупки.");
-        }
-      } catch (error) {
-        console.error("Ошибка:", error);
-        alert("Произошла ошибка при отправке запроса.");
-      }
-    };
-  
-    const handleSell = async () => {
-      const totalCost = sellPrice * sellAmount;
-  
-      if (totalCost > balance) {
-        alert("Недостаточно средств на балансе для продажи.");
-        return;
-      }
-  
-      const sellData = {
-        currency: currency,
-        price: sellPrice,
-        amount: sellAmount,
-      };
-  
-      try {
-        const response = await fetch("http://127.0.0.1:8000/set-sell-price/", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(sellData),
-        });
-  
-        if (response.ok) {
-          alert("Продажа успешно выполнена!");
-        } else {
-          alert("Ошибка при выполнении продажи.");
-        }
-      } catch (error) {
-        console.error("Ошибка:", error);
-        alert("Произошла ошибка при отправке запроса.");
-      }
-    };
-  
-    const [balance, setBalance] = useState(0);
-    useEffect(() => {
-      const fetchBalance = async () => {
+    const updateBalance = async (amount, currency = "USD") => {
         try {
-          const response = await fetch("http://127.0.0.1:8000/user-deposit/", {
-            method: "GET",
+          const response = await fetch("http://127.0.0.1:8000/deposit/", {
+            method: "POST",
             headers: {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json",
             },
+            body: JSON.stringify({ amount, currency }),
           });
-  
-          if (response.ok) {
-            const data = await response.json();
-            setBalance(data.balance);
-          } else {
-            console.error("Ошибка при получении баланса");
+      
+          if (!response.ok) {
+            throw new Error("Ошибка при обновлении баланса на сервере");
           }
+      
+          const data = await response.json();
+          return data.balance; // Возвращаем новый баланс
         } catch (error) {
           console.error("Ошибка:", error);
+          throw error;
         }
       };
+
+   const handleBuy = async () => {
+  const totalCost = price * amount;
+
+  if (totalCost > balance) {
+    alert("Недостаточно средств на балансе для покупки.");
+    return;
+  }
+
+  const buyData = {
+    currency: currency,
+    price: price,
+    amount: amount,
+  };
+
+  try {
+    // Шаг 1: Выполняем покупку
+    const buyResponse = await fetch("http://127.0.0.1:8000/set-buy-price/", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(buyData),
+    });
+
+    if (!buyResponse.ok) {
+      throw new Error("Ошибка при выполнении покупки");
+    }
+
+    // Шаг 2: Обновляем баланс на сервере
+    const newBalance = await updateBalance(balance - totalCost, "USD");
+
+    // Шаг 3: Обновляем баланс на фронтенде
+    setBalance(newBalance);
+
+    alert("Покупка успешно выполнена!");
+  } catch (error) {
+    console.error("Ошибка:", error);
+    alert("Произошла ошибка при выполнении операции.");
+  }
+};
+      
+const handleSell = async () => {
+    const totalCost = sellPrice * sellAmount;
   
-      fetchBalance();
-    }, [token]);
+    if (totalCost > balance) {
+      alert("Недостаточно средств на балансе для продажи.");
+      return;
+    }
+  
+    const sellData = {
+      currency: currency,
+      price: sellPrice,
+      amount: sellAmount,
+    };
+  
+    try {
+      // Шаг 1: Выполняем продажу
+      const sellResponse = await fetch("http://127.0.0.1:8000/set-sell-price/", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sellData),
+      });
+  
+      if (!sellResponse.ok) {
+        throw new Error("Ошибка при выполнении продажи");
+      }
+  
+      // Шаг 2: Обновляем баланс на сервере
+      const newBalance = await updateBalance(balance + totalCost, "USD");
+  
+      // Шаг 3: Обновляем баланс на фронтенде
+      setBalance(newBalance);
+  
+      alert("Продажа успешно выполнена!");
+    } catch (error) {
+      console.error("Ошибка:", error);
+      alert("Произошла ошибка при выполнении операции.");
+    }
+  };
+  
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/user-deposit/", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance);
+        } else {
+          console.error("Ошибка при получении баланса");
+        }
+      } catch (error) {
+        console.error("Ошибка:", error);
+      }
+    };
+  
+    fetchBalance();
+  }, [token]);
   
     const handlePriceChange = (value) => {
       setPrice(value);
@@ -219,7 +257,7 @@ const SalesPageDesktop = () => {
                 ref={amountRef}
                 className="absolute top-[-35px] transform -translate-x-1/2 bg-[#0E0E1A] text-white text-xs font-bold px-3 py-1 rounded-full border border-[#6C5DD3] shadow-md"
               >
-                ${amount.toLocaleString()}
+                {amount.toLocaleString()}
               </div>
               <input
                 type="range"
@@ -331,7 +369,7 @@ const SalesPageDesktop = () => {
                 ref={sellAmountRef}
                 className="absolute top-[-40px] bg-[#0E0E1A] text-white text-xs font-bold px-3 py-1 rounded-full border border-[#6C5DD3] shadow-md"
               >
-                ${sellAmount.toFixed(2)}
+                {sellAmount.toFixed(2)}
               </div>
               <input
                 type="range"

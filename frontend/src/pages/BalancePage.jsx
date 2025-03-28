@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import Footer from "../components/Footer";
 import "react-circular-progressbar/dist/styles.css";
@@ -10,14 +10,21 @@ import btcWhite from '../img/btcWhite.svg'
 import {useNavigate } from "react-router-dom";
 
 
-import BalanceCircle from "../components/BalanceCircle";
+import XrpBalanceCircle from "../components/XrpBalanceCircle";
+
 const BalancePage = () => {
     const navigate = useNavigate()
     const handleClick = () => {
         navigate('/dashboard')
     }
     const percentage = 43
-    const percentages = 68
+      // Состояние для хранения баланса XRP
+      const [xrpBalance, setXrpBalance] = useState(0);
+    
+      // Функция для обновления баланса
+      const handleBalanceUpdate = (balance) => {
+        setXrpBalance(balance);
+      };
   return (
     <div className="flex flex-col bg-transparent h-auto text-white p-4 max-w-md mx-auto gap-4 pb-[120px]">
       <div className="w-full flex justify-between items-center mb-6 relative mt-16 px-4">
@@ -103,47 +110,15 @@ const BalancePage = () => {
                 <p className="font-semibold text-left text-lg">XRP Balances</p>
             </div>
             <div>
-                <p className="font-semibold text-left text-lg">$2,910.93</p>
-            </div>
-           </div>
+                  {/* Отображаем баланс из состояния */}
+                  <p className="font-semibold text-left text-[28px]">${xrpBalance.toFixed(2)}</p>
+                </div>
+              </div>
 
-             <div className="relative w-48 h-48 flex items-center justify-center mx-auto">
-                 {/* Внешний пунктирный круг */}
-                 <div className="absolute w-full h-full rounded-full border-[3px] border-dashed border-blue-500 opacity-50"></div>
-           
-                 {/* Средний круг */}
-                 <div className="absolute w-[90%] h-[90%] rounded-full border-[6px] border-solid border-[#1A1A3D]"></div>
-                 
-                 {/* Внутренний прогресс-бар */}
-                 <div className="absolute w-[80%] h-[80%]">
-                   <CircularProgressbar
-                     value={percentages}
-                     strokeWidth={10}
-                     styles={buildStyles({
-                       strokeLinecap: "round",
-                       pathColor: "url(#gradient)", // Градиентный цвет
-                       trailColor: "#12122A",
-                       rotation: 0.75, // Смещение начала
-                     })}
-                   />
-                 </div>
-                 
-                 {/* Градиент для прогресса */}
-                 <svg style={{ height: 0 }}>
-                   <defs>
-                     <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="1">
-                       <stop offset="0%" stopColor="#A020F0" />
-                       <stop offset="100%" stopColor="#00A2FF" />
-                     </linearGradient>
-                   </defs>
-                 </svg>
-           
-                 {/* Баланс в центре */}
-                 <div className="absolute text-center">
-                   <p className="text-gray-300 text-sm">Your Balance</p>
-                   <p className="text-xl font-bold text-purple-400">$2910.93</p>
-                 </div>
-               </div>
+              <div className="flex justify-center">
+                {/* Передаем callback-функцию в XrpBalanceCircle */}
+                <XrpBalanceCircle onBalanceUpdate={handleBalanceUpdate} />
+              </div>
         </div>
         
         <div className="flex flex-col gap-4">

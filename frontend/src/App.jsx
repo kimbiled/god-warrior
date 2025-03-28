@@ -16,6 +16,8 @@ import BalancePageDesktop from "./pages/BalancePageDesktop";
 import NotificationPageDesktop from "./pages/NotificationPageDesktop";
 import ProfilePageDesktop from "./pages/ProfilePageDesktop";
 
+import AdminPage from "./pages/AdminPage";
+
 const isMobile = window.innerWidth <= 768;
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
         <Route path="/balance" element={isMobile? <BalancePage /> : <BalancePageDesktop />} />
         <Route path="/notification" element={isMobile? <NotificationPage /> : <NotificationPageDesktop />} />
         <Route path="/profile" element={isMobile? <ProfilePage /> : <ProfilePageDesktop />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </Router>
   );
